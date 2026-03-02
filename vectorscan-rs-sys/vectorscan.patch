@@ -7120,7 +7120,10 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp vectorscan
 diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp
 --- vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp	2025-07-22 11:09:14
 +++ vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp	2026-03-03 00:55:00
-@@ -44,5 +44,10 @@
+@@ -41,11 +41,16 @@
+ // 128-bit SSE implementation
+ #if !(!defined(RELEASE_BUILD) && defined(FAT_RUNTIME) && (defined(HAVE_AVX2) || defined(HAVE_AVX512))) && defined(HAVE_SIMD_128_BITS)
+ 
 +// MinGW links an out-of-line copy constructor here and an inline one from
 +// supervector.hpp, which causes duplicate symbols. Keep the inline version on
 +// MinGW and keep this specialization on other toolchains.
@@ -7131,7 +7134,13 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.c
      u.v128[0] = other.u.v128[0];
  }
 +#endif
-@@ -584,5 +589,7 @@
+ 
+ template<>
+ really_inline SuperVector<16>::SuperVector(typename base_type::type const v)
+@@ -581,11 +586,13 @@
+ // 256-bit AVX2 implementation
+ #if !(!defined(RELEASE_BUILD) && defined(FAT_RUNTIME) && defined(HAVE_AVX512)) && defined(HAVE_AVX2)
+ 
 +#ifndef __MINGW32__
  template<>
  really_inline SuperVector<32>::SuperVector(SuperVector const &other)
@@ -7139,3 +7148,6 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.c
      u.v256[0] = other.u.v256[0];
  }
 +#endif
+ 
+ template<>
+ really_inline SuperVector<32>::SuperVector(typename base_type::type const v)
