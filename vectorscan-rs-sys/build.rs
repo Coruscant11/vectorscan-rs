@@ -15,8 +15,6 @@ fn main() {
 
     let manifest_dir = PathBuf::from(env("CARGO_MANIFEST_DIR"));
     let out_dir = PathBuf::from(env("OUT_DIR"));
-    let target = env("TARGET");
-    let target_is_windows = target.contains("windows");
 
     let include_dir = out_dir
         .join("include")
@@ -129,8 +127,7 @@ fn main() {
             .define("BUILD_DOC", "OFF")
             .define("BUILD_TOOLS", "OFF");
 
-        let build_unit = cfg!(feature = "unit_hyperscan") && !target_is_windows;
-        cfg.define("BUILD_UNIT", if build_unit { "ON" } else { "OFF" });
+        cfg_define_feature!("BUILD_UNIT", "unit_hyperscan");
         cfg_define_feature!("USE_CPU_NAIVE", "cpu_native");
 
         if cfg!(feature = "asan") {
@@ -205,13 +202,11 @@ fn main() {
     // Run hyperscan unit test suite
     #[cfg(feature = "unit_hyperscan")]
     {
-        if !target_is_windows {
-            let unittests = out_dir.join("build").join("bin").join("unit-hyperscan");
-            match Command::new(unittests).status() {
-                Ok(rc) if rc.success() => {}
-                Ok(rc) => panic!("Failed to run unit tests: exit with code {rc}"),
-                Err(e) => panic!("Failed to run unit tests: {e}"),
-            }
+        let unittests = out_dir.join("build").join("bin").join("unit-hyperscan");
+        match Command::new(unittests).status() {
+            Ok(rc) if rc.success() => {}
+            Ok(rc) => panic!("Failed to run unit tests: exit with code {rc}"),
+            Err(e) => panic!("Failed to run unit tests: {e}"),
         }
     }
 

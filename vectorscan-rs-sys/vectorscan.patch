@@ -7087,3 +7087,15 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp v
 @@ -74 +74 @@
 -            desiredStride = std::min(min_len - 1, 2UL);
 +            desiredStride = std::min<size_t>(min_len - 1, 2);
+diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp
+--- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp	2026-03-02 23:35:00
+@@ -37 +37,3 @@
++#ifndef _WIN32
+ #include <sys/mman.h>
++#endif
+@@ -634 +636,2 @@
++#ifndef _WIN32
+ TEST(OutOfBoundRead, mmap) {
+@@ -656,0 +660 @@
++#endif
