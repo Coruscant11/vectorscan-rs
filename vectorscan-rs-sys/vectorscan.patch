@@ -7081,3 +7081,9 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/util/ExpressionParser.cpp vectorscan
 +
 +    return (cs != ExpressionParser_error) && (p == pe);
 +}
+diff -ruN vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp vectorscan-vectorscan-5.4.12/src/fdr/fdr_engine_description.cpp
+--- vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/src/fdr/fdr_engine_description.cpp	2026-03-02 23:20:00
+@@ -74 +74 @@
+-            desiredStride = std::min(min_len - 1, 2UL);
++            desiredStride = std::min<size_t>(min_len - 1, 2);
