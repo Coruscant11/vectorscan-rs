@@ -316,11 +316,6 @@ jobs:
         toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.rust_target }}
 
-    - name: Select GNU Rust toolchain
-      if: ${{ startsWith(matrix.os, 'windows-') }}
-      shell: msys2 {0}
-      run: rustup default ${{ matrix.rust }}-${{ matrix.rust_target }}
-
     # N.B. cache disabled since certain build configurations end up producing
     # microarchitecture-specific code that is not portable across CPUs
     # generally
@@ -338,7 +333,7 @@ jobs:
     - name: Build tests (Windows GNU)
       if: ${{ startsWith(matrix.os, 'windows-') }}
       shell: msys2 {0}
-      run: cargo test --no-run -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --timings
+      run: PATH="$(cygpath "$CARGO_HOME")/bin:$PATH" cargo test --no-run -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --target=${{ matrix.rust_target }} --timings
 
     - name: Run tests
       if: ${{ !startsWith(matrix.os, 'windows-') }}
@@ -347,7 +342,7 @@ jobs:
     - name: Run tests (Windows GNU)
       if: ${{ startsWith(matrix.os, 'windows-') }}
       shell: msys2 {0}
-      run: cargo test -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --timings
+      run: PATH="$(cygpath "$CARGO_HOME")/bin:$PATH" cargo test -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --target=${{ matrix.rust_target }} --timings
 
     - name: Check documentation
       if: ${{ matrix.check_docs }}
