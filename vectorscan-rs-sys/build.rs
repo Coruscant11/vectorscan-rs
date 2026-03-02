@@ -82,7 +82,13 @@ fn main() {
             .stdin(patchfile)
             .output()
             .expect("Failed to apply patchfile");
-        assert!(output.status.success());
+        if !output.status.success() {
+            panic!(
+                "Failed to apply patchfile.\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
         eprintln!(
             "Successfully applied patches to Vectorscan source directory at {}",
             vectorscan_src_dir.display()

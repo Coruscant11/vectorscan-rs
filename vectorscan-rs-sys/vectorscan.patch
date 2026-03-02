@@ -7090,12 +7090,28 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp v
 diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp
 --- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp	2025-07-22 11:09:14
 +++ vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp	2026-03-02 23:35:00
-@@ -37 +37,3 @@
+@@ -34,7 +34,9 @@
+ 
+ #include <string>
+ #include <tuple>
 +#ifndef _WIN32
  #include <sys/mman.h>
 +#endif
-@@ -634 +636,2 @@
+ using namespace std;
+ using namespace testing;
+ 
+@@ -631,6 +633,7 @@
+ 
+ INSTANTIATE_TEST_CASE_P(Single, HyperscanTestMatchTerminate, ValuesIn(terminateCases));
+ 
 +#ifndef _WIN32
  TEST(OutOfBoundRead, mmap) {
-@@ -656,0 +660 @@
+     const char* pattern = "bat|cat|mat|rat|fat|sat|pat|hat|vat";
+     const char* corpus = "VAt hat pat sat fat rat mat ca";
+@@ -654,6 +657,7 @@
+     hs_free_database(db);
+     munmap(buffer, buffer_len);
+ }
 +#endif
+ 
+ } // namespace
