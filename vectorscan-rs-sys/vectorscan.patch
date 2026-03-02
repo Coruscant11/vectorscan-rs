@@ -7090,28 +7090,52 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp v
 diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp
 --- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp	2025-07-22 11:09:14
 +++ vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp	2026-03-02 23:35:00
-@@ -34,7 +34,9 @@
+@@ -34,7 +34,10 @@
  
  #include <string>
  #include <tuple>
++// sys/mman.h is POSIX-only and unavailable on Windows targets.
 +#ifndef _WIN32
  #include <sys/mman.h>
 +#endif
  using namespace std;
  using namespace testing;
  
-@@ -631,6 +633,7 @@
+@@ -631,6 +634,8 @@
  
  INSTANTIATE_TEST_CASE_P(Single, HyperscanTestMatchTerminate, ValuesIn(terminateCases));
  
++// This test relies on mmap/munmap behavior and has no Windows equivalent.
 +#ifndef _WIN32
  TEST(OutOfBoundRead, mmap) {
      const char* pattern = "bat|cat|mat|rat|fat|sat|pat|hat|vat";
      const char* corpus = "VAt hat pat sat fat rat mat ca";
-@@ -654,6 +657,7 @@
+@@ -654,5 +659,6 @@
      hs_free_database(db);
      munmap(buffer, buffer_len);
  }
 +#endif
  
  } // namespace
+diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp
+--- vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp	2026-03-03 00:55:00
+@@ -44,5 +44,10 @@
++// MinGW links an out-of-line copy constructor here and an inline one from
++// supervector.hpp, which causes duplicate symbols. Keep the inline version on
++// MinGW and keep this specialization on other toolchains.
++#ifndef __MINGW32__
+ template<>
+ really_inline SuperVector<16>::SuperVector(SuperVector const &other)
+ {
+     u.v128[0] = other.u.v128[0];
+ }
++#endif
+@@ -584,5 +589,7 @@
++#ifndef __MINGW32__
+ template<>
+ really_inline SuperVector<32>::SuperVector(SuperVector const &other)
+ {
+     u.v256[0] = other.u.v256[0];
+ }
++#endif
