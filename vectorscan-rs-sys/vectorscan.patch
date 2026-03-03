@@ -7081,3 +7081,113 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/util/ExpressionParser.cpp vectorscan
 +
 +    return (cs != ExpressionParser_error) && (p == pe);
 +}
+diff -ruN vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp vectorscan-vectorscan-5.4.12/src/fdr/fdr_engine_description.cpp
+--- vectorscan-vectorscan-5.4.12.orig/src/fdr/fdr_engine_description.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/src/fdr/fdr_engine_description.cpp	2026-03-02 23:20:00
+@@ -74 +74 @@
+-            desiredStride = std::min(min_len - 1, 2UL);
++            desiredStride = std::min<size_t>(min_len - 1, 2);
+diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp
+--- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/single.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/unit/hyperscan/single.cpp	2026-03-02 23:35:00
+@@ -34,7 +34,10 @@
+ 
+ #include <string>
+ #include <tuple>
++// sys/mman.h is POSIX-only and unavailable on Windows targets.
++#ifndef _WIN32
+ #include <sys/mman.h>
++#endif
+ using namespace std;
+ using namespace testing;
+ 
+@@ -631,6 +634,8 @@
+ 
+ INSTANTIATE_TEST_CASE_P(Single, HyperscanTestMatchTerminate, ValuesIn(terminateCases));
+ 
++// This test relies on mmap/munmap behavior and has no Windows equivalent.
++#ifndef _WIN32
+ TEST(OutOfBoundRead, mmap) {
+     const char* pattern = "bat|cat|mat|rat|fat|sat|pat|hat|vat";
+     const char* corpus = "VAt hat pat sat fat rat mat ca";
+@@ -654,5 +659,6 @@
+     hs_free_database(db);
+     munmap(buffer, buffer_len);
+ }
++#endif
+ 
+ } // namespace
+diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp
+--- vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/src/util/supervector/arch/x86/impl.cpp	2026-03-03 00:55:00
+@@ -41,11 +41,16 @@
+ // 128-bit SSE implementation
+ #if !(!defined(RELEASE_BUILD) && defined(FAT_RUNTIME) && (defined(HAVE_AVX2) || defined(HAVE_AVX512))) && defined(HAVE_SIMD_128_BITS)
+ 
++// MinGW links an out-of-line copy constructor here and an inline one from
++// supervector.hpp, which causes duplicate symbols. Keep the inline version on
++// MinGW and keep this specialization on other toolchains.
++#ifndef __MINGW32__
+ template<>
+ really_inline SuperVector<16>::SuperVector(SuperVector const &other)
+ {
+     u.v128[0] = other.u.v128[0];
+ }
++#endif
+ 
+ template<>
+ really_inline SuperVector<16>::SuperVector(typename base_type::type const v)
+@@ -581,11 +586,13 @@
+ // 256-bit AVX2 implementation
+ #if !(!defined(RELEASE_BUILD) && defined(FAT_RUNTIME) && defined(HAVE_AVX512)) && defined(HAVE_AVX2)
+ 
++#ifndef __MINGW32__
+ template<>
+ really_inline SuperVector<32>::SuperVector(SuperVector const &other)
+ {
+     u.v256[0] = other.u.v256[0];
+ }
++#endif
+ 
+ template<>
+ really_inline SuperVector<32>::SuperVector(typename base_type::type const v)
+diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/regressions.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/regressions.cpp
+--- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/regressions.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/unit/hyperscan/regressions.cpp	2026-03-03 02:15:00
+@@ -66,7 +66,8 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/leipzig-3200.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    // Use binary mode so Windows does not translate CRLF to LF while reading.
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -140,7 +141,7 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -176,7 +177,7 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -214,7 +215,7 @@
+ 
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string

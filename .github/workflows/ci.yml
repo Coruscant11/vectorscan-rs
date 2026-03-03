@@ -266,16 +266,15 @@ jobs:
           check_docs: false
           use_ninja: true
 
-        # Fails:
-        #
-        # - name: windows-2022.x86_64.test
-        #   os: windows-2022
-        #   rust: stable
-        #   profile: test
-        #   features: unit_hyperscan
-        #   install_dependencies: |
-        #   check_docs: false
-        #   use_ninja: false
+        - name: windows-2025.x86_64.test
+          os: windows-2025
+          rust: stable
+          profile: test
+          features: unit_hyperscan
+          install_dependencies: echo windows
+          check_docs: false
+          use_ninja: true
+          rust_target: x86_64-pc-windows-gnu
 
     env:
       CMAKE_GENERATOR: ${{ (matrix.use_ninja && 'Ninja') || 'Unix Makefiles' }}
@@ -285,14 +284,37 @@ jobs:
       with:
         persist-credentials: false
 
+    - name: Setup MSYS2
+      if: ${{ startsWith(matrix.os, 'windows-') }}
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-boost
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-pkgconf
+          mingw-w64-x86_64-toolchain
+          patch
+
     - name: Install dependencies
       run: ${{ matrix.install_dependencies }}
 
     - name: Install Rust toolchain
+      if: ${{ !startsWith(matrix.os, 'windows-') }}
       id: install-rust-toolchain
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ matrix.rust }}
+
+    - name: Install Rust toolchain (Windows GNU)
+      if: ${{ startsWith(matrix.os, 'windows-') }}
+      id: install-rust-toolchain-windows
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        targets: ${{ matrix.rust_target }}
 
     # N.B. cache disabled since certain build configurations end up producing
     # microarchitecture-specific code that is not portable across CPUs
@@ -305,10 +327,22 @@ jobs:
     #     key: ${{ matrix.name }}
 
     - name: Build tests
+      if: ${{ !startsWith(matrix.os, 'windows-') }}
       run: cargo test --no-run -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --timings
 
+    - name: Build tests (Windows GNU)
+      if: ${{ startsWith(matrix.os, 'windows-') }}
+      shell: msys2 {0}
+      run: PATH="$(cygpath "$CARGO_HOME")/bin:$PATH" cargo test --no-run -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --target=${{ matrix.rust_target }} --timings
+
     - name: Run tests
+      if: ${{ !startsWith(matrix.os, 'windows-') }}
       run: cargo test -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --timings
+
+    - name: Run tests (Windows GNU)
+      if: ${{ startsWith(matrix.os, 'windows-') }}
+      shell: msys2 {0}
+      run: PATH="$(cygpath "$CARGO_HOME")/bin:$PATH" cargo test -vv --profile=${{ matrix.profile }} --features=${{ matrix.features }} --target=${{ matrix.rust_target }} --timings
 
     - name: Check documentation
       if: ${{ matrix.check_docs }}
