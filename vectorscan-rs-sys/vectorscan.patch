@@ -7151,3 +7151,43 @@ diff -ruN vectorscan-vectorscan-5.4.12.orig/src/util/supervector/arch/x86/impl.c
  
  template<>
  really_inline SuperVector<32>::SuperVector(typename base_type::type const v)
+diff -ruN vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/regressions.cpp vectorscan-vectorscan-5.4.12/unit/hyperscan/regressions.cpp
+--- vectorscan-vectorscan-5.4.12.orig/unit/hyperscan/regressions.cpp	2025-07-22 11:09:14
++++ vectorscan-vectorscan-5.4.12/unit/hyperscan/regressions.cpp	2026-03-03 02:15:00
+@@ -66,7 +66,8 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/leipzig-3200.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    // Use binary mode so Windows does not translate CRLF to LF while reading.
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -140,7 +141,7 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -176,7 +177,7 @@
+     ASSERT_TRUE(scratch != nullptr);
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
+@@ -214,7 +215,7 @@
+ 
+ 
+     string filename = "unit/hyperscan/datafiles/lh3lh3-reb-howto.txt";
+-    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str());
++    std::ifstream file((string(SRCDIR_PREFIX) + "/" + filename).c_str(), std::ios::binary);
+     std::stringstream buffer;
+     buffer << file.rdbuf(); // Read the file into the buffer
+     std::string data = buffer.str(); // Convert the buffer into a std::string
